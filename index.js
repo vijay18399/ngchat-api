@@ -20,11 +20,19 @@ let io = require("socket.io")(server);
 io.on("connection", (socket) => {
   socket.on("login", (data) => {
     console.log(data);
-    io.emit("users-changed", { user: data.username, event: "joined" });
+    io.emit("users-changed", {
+      user: data.username,
+      roomId: data.roomId,
+      event: "joined",
+    });
   });
   socket.on("typing", (data) => {
     console.log(data);
-    io.emit(data.roomId, { message: data.message, event: "typing" });
+    io.emit(data.roomId, {
+      message: data.message,
+      from: data.username,
+      event: "typing",
+    });
   });
   socket.on("message", (data) => {
     console.log(data);
@@ -32,12 +40,17 @@ io.on("connection", (socket) => {
     io.emit(data.roomId, {
       message: data.message,
       score: score,
+      from: data.username,
       event: "message",
     });
   });
   socket.on("logout", (data) => {
     console.log(data);
-    io.emit("users-changed", { user: data.username, event: "left" });
+    io.emit("users-changed", {
+      user: data.username,
+      roomId: data.roomId,
+      event: "left",
+    });
   });
 });
 
