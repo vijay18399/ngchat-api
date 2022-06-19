@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start":"node index.js",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -14,6 +14,8 @@
     "http": "0.0.1-security",
     "path": "^0.12.7",
     "peer": "^0.6.1",
-    "socket.io": "^4.5.1"
+    "sentiment": "^5.0.2",
+    "socket.io": "^4.5.1",
+    "uuidv4": "^6.2.13"
   }
 }

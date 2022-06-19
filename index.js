@@ -1,32 +1,48 @@
-var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var port = process.env.PORT || 3000;
+var express = require("express");
+var bodyParser = require("body-parser");
+var Sentiment = require("sentiment");
+const { uuid } = require("uuidv4");
+var sentiment = new Sentiment();
+var cors = require("cors");
+var app = express();
 
-io.on('connection', socket => {
-    socket.on('room_join_request', payload => {
-        socket.join(payload.roomName, err => {
-            if (!err) {
-                io.in(payload.roomName).clients((err, clients) => {
-                    if (!err) {
-                        io.in(payload.roomName).emit('room_users', clients)
-                    }
-                });
-            }
-        })
-    })
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-    socket.on('offer_signal', payload => {
-        io.to(payload.calleeId).emit('offer', { signalData: payload.signalData, callerId: payload.callerId });
-    });
-
-    socket.on('answer_signal', payload => {
-        io.to(payload.callerId).emit('answer', { signalData: payload.signalData, calleeId: socket.id });
-    });
-
-    socket.on('disconnect', () => {
-        io.emit('room_left', { type: 'disconnected', socketId: socket.id })
-    })
+app.get("/", function (req, res) {
+  return res.status(201).json("Socket API Working");
 });
 
-http.listen(port, () => console.log('listening on *:' + port)); 
+let server = require("http").createServer(app);
+let io = require("socket.io")(server);
+
+io.on("connection", (socket) => {
+  socket.on("login", (data) => {
+    console.log(data);
+    io.emit("users-changed", { user: data.username, event: "joined" });
+  });
+  socket.on("typing", (data) => {
+    console.log(data);
+    io.emit(data.roomId, { message: data.message, event: "typing" });
+  });
+  socket.on("message", (data) => {
+    console.log(data);
+    score = sentiment.analyze(data.message).score;
+    io.emit(data.roomId, {
+      message: data.message,
+      score: score,
+      event: "message",
+    });
+  });
+  socket.on("logout", (data) => {
+    console.log(data);
+    io.emit("users-changed", { user: data.username, event: "left" });
+  });
+});
+
+var port = process.env.PORT || 3000;
+
+server.listen(port, function () {
+  console.log("socket.io listening in http://localhost:" + port);
+});
