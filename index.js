@@ -15,7 +15,12 @@ app.get("/", function (req, res) {
 });
 
 let server = require("http").createServer(app);
-let io = require("socket.io")(server);
+const io = require("socket.io")(httpServer, {
+  cors: {
+    origin: "http://localhost:4200",
+    methods: ["GET", "POST"],
+  },
+});
 
 io.on("connection", (socket) => {
   socket.on("login", (data) => {
@@ -29,16 +34,16 @@ io.on("connection", (socket) => {
   socket.on("typing", (data) => {
     console.log(data);
     io.emit(data.roomId, {
-      message: data.message,
+      message: data.text,
       from: data.username,
       event: "typing",
     });
   });
   socket.on("message", (data) => {
     console.log(data);
-    score = sentiment.analyze(data.message).score;
+    score = sentiment.analyze(data.text).score;
     io.emit(data.roomId, {
-      message: data.message,
+      message: data.text,
       score: score,
       from: data.username,
       event: "message",
